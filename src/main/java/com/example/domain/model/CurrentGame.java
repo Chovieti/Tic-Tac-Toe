@@ -15,4 +15,12 @@ public class CurrentGame {
         id = UUID.randomUUID();
         this.field = field;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public GameField getField() {
+        return field;
+    }
 }
