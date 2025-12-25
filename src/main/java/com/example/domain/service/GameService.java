@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface GameService {
     CurrentGame createNewGame();
+    CurrentGame getGame(UUID gameId);
     Move nextTurn(UUID gameId);
     boolean validateField(UUID gameId, int[][] newField);
     boolean isGameOver(UUID gameId);

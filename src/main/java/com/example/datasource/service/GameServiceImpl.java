@@ -29,6 +29,15 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public CurrentGame getGame(UUID gameId) {
+        Optional<CurrentGame> game = repository.getGame(gameId);
+        if (game.isEmpty()) {
+            throw new GameNotFoundException("Game not found: " + gameId);
+        }
+        return game.get();
+    }
+
+    @Override
     public Move nextTurn(UUID gameId) {
         Optional<CurrentGame> game = repository.getGame(gameId);
         if (game.isEmpty()) {

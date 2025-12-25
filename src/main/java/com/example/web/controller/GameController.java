@@ -4,7 +4,6 @@ import com.example.domain.service.GameService;
 import com.example.web.mapper.MapperDomainWeb;
 import com.example.web.model.WebCurrentGame;
 import com.example.web.model.WebGameField;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +20,12 @@ public class GameController {
     @GetMapping("/game")
     public ResponseEntity<WebCurrentGame> createNewGame() {
         WebCurrentGame response = MapperDomainWeb.toWebCurrentGame(service.createNewGame());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/game/{gameId}")
+    public ResponseEntity<WebCurrentGame> getGame(@PathVariable UUID gameId) {
+        WebCurrentGame response = MapperDomainWeb.toWebCurrentGame(service.getGame(gameId));
         return ResponseEntity.ok(response);
     }
 
