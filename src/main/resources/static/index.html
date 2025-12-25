@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Крестики-Нолики</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Крестики-Нолики vs AI</h1>
+
+    <div class="controls">
+        <button onclick="createGame()">Новая игра</button>
+        <button onclick="resetGame()">Сбросить</button>
+    </div>
+
+    <div class="game-id">
+        ID игры: <span id="game-id">-</span>
+    </div>
+
+    <div id="error" class="error"></div>
+    <div id="status" class="status">Нажмите "Новая игра"</div>
+
+    <div class="board">
+        <div class="row">
+            <div class="cell" data-row="0" data-col="0" onclick="cellClick(0,0)"></div>
+            <div class="cell" data-row="0" data-col="1" onclick="cellClick(0,1)"></div>
+            <div class="cell" data-row="0" data-col="2" onclick="cellClick(0,2)"></div>
+        </div>
+        <div class="row">
+            <div class="cell" data-row="1" data-col="0" onclick="cellClick(1,0)"></div>
+            <div class="cell" data-row="1" data-col="1" onclick="cellClick(1,1)"></div>
+            <div class="cell" data-row="1" data-col="2" onclick="cellClick(1,2)"></div>
+        </div>
+        <div class="row">
+            <div class="cell" data-row="2" data-col="0" onclick="cellClick(2,0)"></div>
+            <div class="cell" data-row="2" data-col="1" onclick="cellClick(2,1)"></div>
+            <div class="cell" data-row="2" data-col="2" onclick="cellClick(2,2)"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentGameId = null;
+    let board = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+    ];
+
+    // Создать новую игру
+    async function createGame() {
+        try {
+            const response = await fetch('/game');
+            const game = await response.json();
+
+            currentGameId = game.id;
+            document.getElementById('game-id').textContent = game.id;
+
+            updateBoard(game.field.field);
+            setStatus('Ваш ход (X)');
+            clearError();
+
+        } catch (error) {
+            showError('Ошибка: ' + error.message);
+        }
+    }
+
+    // Клик по клетке
+    async function cellClick(row, col) {
+        if (!currentGameId) {
+            showError('Сначала создайте игру');
+            return;
+        }
+
+        if (board[row][col] !== 0) {
+            showError('Клетка занята');
+            return;
+        }
+
+        // Копируем доску и ставим X
+        const newBoard = JSON.parse(JSON.stringify(board));
+        newBoard[row][col] = 1;
+
+        try {
+            setStatus('Ход компьютера...');
+
+            const response = await fetch(`/game/${currentGameId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({field: newBoard})
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message);
+            }
+
+            const game = await response.json();
+            updateBoard(game.field.field);
+            checkGameState();
+
+        } catch (error) {
+            showError(error.message);
+            setStatus('Ошибка');
+        }
+    }
+
+    // Обновить доску на экране
+    function updateBoard(newBoard) {
+        board = newBoard;
+
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                cell.textContent = board[row][col] === 1 ? 'X' :
+                                  board[row][col] === 2 ? 'O' : '';
+            }
+        }
+    }
+
+    // Проверить состояние игры
+    function checkGameState() {
+        const winner = checkWinner();
+
+        if (winner === 1) {
+            setStatus('Вы выиграли!');
+        } else if (winner === 2) {
+            setStatus('Компьютер выиграл!');
+        } else if (isBoardFull()) {
+            setStatus('Ничья!');
+        } else {
+            setStatus('Ваш ход (X)');
+        }
+    }
+
+    // Проверка победителя
+    function checkWinner() {
+        // Горизонтали
+        for (let i = 0; i < 3; i++) {
+            if (board[i][0] && board[i][0] === board[i][1] && board[i][0] === board[i][2]) {
+                return board[i][0];
+            }
+        }
+
+        // Вертикали
+        for (let i = 0; i < 3; i++) {
+            if (board[0][i] && board[0][i] === board[1][i] && board[0][i] === board[2][i]) {
+                return board[0][i];
+            }
+        }
+
+        // Диагонали
+        if (board[0][0] && board[0][0] === board[1][1] && board[0][0] === board[2][2]) {
+            return board[0][0];
+        }
+        if (board[0][2] && board[0][2] === board[1][1] && board[0][2] === board[2][0]) {
+            return board[0][2];
+        }
+
+        return 0;
+    }
+
+    // Проверка заполненности доски
+    function isBoardFull() {
+        return board.flat().every(cell => cell !== 0);
+    }
+
+    // Сброс игры
+    function resetGame() {
+        currentGameId = null;
+        board = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+        ];
+
+        document.getElementById('game-id').textContent = '-';
+        updateBoard(board);
+        setStatus('Нажмите "Новая игра"');
+        clearError();
+    }
+
+    // Вспомогательные функции
+    function setStatus(text) {
+        document.getElementById('status').textContent = text;
+    }
+
+    function showError(text) {
+        document.getElementById('error').textContent = text;
+        document.getElementById('error').style.display = 'block';
+    }
+
+    function clearError() {
+        document.getElementById('error').textContent = '';
+        document.getElementById('error').style.display = 'none';
+    }
+
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', () => {
+        updateBoard(board);
+    });
+</script>
+</body>
+</html>
