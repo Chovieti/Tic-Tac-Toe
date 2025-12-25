@@ -1,7 +1,11 @@
 package com.example.datasource.service;
 
 import com.example.datasource.repository.GameRepository;
+import com.example.domain.exception.GameNotFoundException;
+import com.example.domain.exception.GameOverException;
+import com.example.domain.exception.InvalidMoveException;
 import com.example.domain.model.CurrentGame;
+import com.example.domain.model.GameField;
 import com.example.domain.model.Move;
 import com.example.domain.service.GameService;
 
@@ -15,12 +19,25 @@ public class GameServiceImpl implements GameService {
     public GameServiceImpl(GameRepository repository) {
         this.repository = repository;
     }
+
+    @Override
+    public CurrentGame createNewGame() {
+        GameField field = new GameField(new int[3][3]);
+        CurrentGame newGame = new CurrentGame(field);
+        repository.saveGame(newGame);
+        return newGame;
+    }
+
     @Override
     public Move nextTurn(UUID gameId) {
         Optional<CurrentGame> game = repository.getGame(gameId);
-        if (game.isEmpty()) return null;
+        if (game.isEmpty()) {
+            throw new GameNotFoundException("Game not found: " + gameId);
+        }
         int[][] field = game.get().getField().getField();
-        if (checkWinner(field) != 0) return null;
+        if (checkWinner(field) != 0) {
+            throw new GameOverException("Game is already over");
+        }
 
         int bestScore = Integer.MIN_VALUE;
         Move bestMove = null;
@@ -100,6 +117,55 @@ public class GameServiceImpl implements GameService {
         int[][] field = game.get().getField().getField();
         if (checkWinner(field) != 0) return true;
         return fieldIsFilled(field);
+    }
+
+    @Override
+    public CurrentGame processUserMove(UUID gameId, int[][] userMoveField) {
+        if (userMoveField == null || userMoveField.length != 3) {
+            throw new InvalidMoveException("Field must be 3x3");
+        }
+        for (int i = 0; i < 3; i++) {
+            if (userMoveField[i] == null || userMoveField[i].length != 3) {
+                throw new InvalidMoveException("Field must be 3x3");
+            }
+        }
+
+        Optional<CurrentGame> currentGame = repository.getGame(gameId);
+        if (currentGame.isEmpty()) {
+            throw new GameNotFoundException("Game not found: " + gameId);
+        }
+        CurrentGame game = currentGame.get();
+
+        if (isGameOver(gameId)) {
+            throw new GameOverException("Game is already over");
+        }
+        if (!validateField(gameId, userMoveField)) {
+            throw new InvalidMoveException("Invalid move");
+        }
+
+        CurrentGame gameAfterUserMove = new CurrentGame(gameId, new GameField(userMoveField));
+        repository.saveGame(gameAfterUserMove);
+        if (!isGameOver(gameId)) {
+            Move computerMove = nextTurn(gameId);
+            if (computerMove == null) {
+                throw new IllegalStateException("Computer cannot make a move");
+            }
+            int[][] computerField = applyMoveToField(userMoveField, computerMove);
+            CurrentGame gameAfterComputerMove = new CurrentGame(gameId, new GameField(computerField));
+            repository.saveGame(gameAfterComputerMove);
+
+            return gameAfterComputerMove;
+        }
+        return gameAfterUserMove;
+    }
+
+    private int[][] applyMoveToField(int[][] field, Move move) {
+        int[][] newField = new int[3][3];
+        for (int i = 0; i < 3; i++) {
+            System.arraycopy(field[i], 0, newField[i], 0, 3);
+        }
+        newField[move.y()][move.x()] = move.value();
+        return newField;
     }
 
     private int checkWinner(int[][] field) {
