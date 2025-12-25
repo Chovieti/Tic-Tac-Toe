@@ -2,8 +2,10 @@ package com.example.domain.service;
 
 import com.example.domain.model.Move;
 
+import java.util.UUID;
+
 public interface GameService {
-    Move nextTurn();
+    Move nextTurn(UUID gameId);
     boolean validateField();
-    boolean isGameOver();
+    boolean isGameOver(UUID gameId);
 }
