@@ -149,7 +149,7 @@ public class GameServiceImpl implements GameService {
             throw new GameOverException("Game is already over");
         }
         if (!validateField(gameId, userMoveField)) {
-            throw new InvalidMoveException("Invalid move");
+            throw new InvalidMoveException("Incorrect field");
         }
 
         CurrentGame gameAfterUserMove = new CurrentGame(gameId, new GameField(userMoveField));

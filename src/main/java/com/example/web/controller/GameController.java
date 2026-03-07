@@ -32,8 +32,6 @@ public class GameController {
     @PostMapping("/game/{gameId}")
     public ResponseEntity<WebCurrentGame> sendGame(@PathVariable UUID gameId,
                                                    @RequestBody WebGameField field) {
-        // TODO Разобраться где обрабатывать отправку поля некорректного размера
-        // Если отправлена некорректна игра
         WebCurrentGame response =
                 MapperDomainWeb.toWebCurrentGame(service.processUserMove(gameId, field.getField()));
         return ResponseEntity.ok(response);

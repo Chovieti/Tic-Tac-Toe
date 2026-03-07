@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Крестики-нолики — игра</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 30px;
+    }
+    .game-container {
+        display: inline-block;
+    }
+    table {
+        border-collapse: collapse;
+        margin: 20px auto;
+    }
+    td {
+        width: 80px;
+        height: 80px;
+        border: 2px solid #333;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    td.X {
+        color: #f00;
+    }
+    td.O {
+        color: #00f;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin: 10px;
+    }
+    .status {
+        margin: 20px;
+        font-size: 18px;
+        color: #555;
+    }
+    .error {
+        color: red;
+    }
+    .game-id {
+        font-family: monospace;
+        background: #f0f0f0;
+        padding: 5px;
+        border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+<h1>Крестики-нолики с компьютером</h1>
+<div class="game-container">
+  <div>
+    <button id="newGameBtn">Новая игра</button>
+  </div>
+  <div class="status" id="status">Загрузка...</div>
+  <div id="gameIdDisplay" class="game-id"></div>
+  <table id="board">
+    <!-- Поле будет сгенерировано JS -->
+  </table>
+</div>
+
+<script>
+  const API_BASE_URL = '';
+
+  // Получаем ID игры из URL-параметра
+  const urlParams = new URLSearchParams(window.location.search);
+  const gameId = urlParams.get('id');
+  if (!gameId) {
+      alert('Не указан ID игры. Перенаправление на главную.');
+      window.location.href = '/';
+  }
+
+  let currentBoard = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0]
+  ];
+  let gameOver = false;
+
+  const boardEl = document.getElementById('board');
+  const statusEl = document.getElementById('status');
+  const gameIdDisplay = document.getElementById('gameIdDisplay');
+  const newGameBtn = document.getElementById('newGameBtn');
+
+  // Загружаем состояние игры при загрузке страницы
+  async function loadGame() {
+      try {
+          const response = await fetch(`${API_BASE_URL}/game/${gameId}`);
+          if (!response.ok) {
+              if (response.status === 404) throw new Error('Игра не найдена');
+              throw new Error('Ошибка загрузки игры');
+          }
+          const gameData = await response.json();
+          // Обратите внимание: gameData.field.field — потому что WebCurrentGame содержит поле field типа WebGameField,
+          // у которого тоже есть поле field (массив). Если хотите упростить, можно изменить маппер на сервере.
+          currentBoard = gameData.field.field;
+          renderBoard(currentBoard);
+          gameIdDisplay.textContent = `ID игры: ${gameId}`;
+          await checkGameOver();
+      } catch (error) {
+          statusEl.innerHTML = `<span class="error">Ошибка: ${error.message}</span>`;
+      }
+  }
+
+  function renderBoard(board) {
+      boardEl.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+          const tr = document.createElement('tr');
+          for (let j = 0; j < 3; j++) {
+              const td = document.createElement('td');
+              const cellValue = board[i][j];
+              if (cellValue === 1) {
+                  td.textContent = 'X';
+                  td.classList.add('X');
+              } else if (cellValue === 2) {
+                  td.textContent = 'O';
+                  td.classList.add('O');
+              } else {
+                  td.textContent = '';
+              }
+              td.dataset.row = i;
+              td.dataset.col = j;
+              td.addEventListener('click', onCellClick);
+              tr.appendChild(td);
+          }
+          boardEl.appendChild(tr);
+      }
+  }
+
+  async function onCellClick(event) {
+      if (gameOver) {
+          alert('Игра окончена. Начните новую.');
+          return;
+      }
+      const row = parseInt(event.target.dataset.row);
+      const col = parseInt(event.target.dataset.col);
+      if (currentBoard[row][col] !== 0) {
+          alert('Эта клетка уже занята!');
+          return;
+      }
+
+      const newBoard = currentBoard.map(rowArr => [...rowArr]);
+      newBoard[row][col] = 1;
+
+      await sendUserMove(newBoard);
+  }
+
+  async function sendUserMove(board) {
+      try {
+          const response = await fetch(`${API_BASE_URL}/game/${gameId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ field: board })
+          });
+
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || `Ошибка ${response.status}`);
+          }
+
+          const gameData = await response.json();
+          currentBoard = gameData.field.field;
+          renderBoard(currentBoard);
+          await checkGameOver();
+      } catch (error) {
+          statusEl.innerHTML = `<span class="error">Ошибка: ${error.message}</span>`;
+      }
+  }
+
+  async function checkGameOver() {
+      const winner = checkWinner(currentBoard);
+      if (winner === 1) {
+          statusEl.textContent = 'Вы выиграли!';
+          gameOver = true;
+      } else if (winner === 2) {
+          statusEl.textContent = 'Компьютер выиграл!';
+          gameOver = true;
+      } else if (isBoardFull(currentBoard)) {
+          statusEl.textContent = 'Ничья!';
+          gameOver = true;
+      } else {
+          gameOver = false;
+          statusEl.textContent = 'Ваш ход';
+      }
+  }
+
+  function checkWinner(board) {
+      const lines = [
+          [board[0][0], board[0][1], board[0][2]],
+          [board[1][0], board[1][1], board[1][2]],
+          [board[2][0], board[2][1], board[2][2]],
+          [board[0][0], board[1][0], board[2][0]],
+          [board[0][1], board[1][1], board[2][1]],
+          [board[0][2], board[1][2], board[2][2]],
+          [board[0][0], board[1][1], board[2][2]],
+          [board[0][2], board[1][1], board[2][0]]
+      ];
+      for (let line of lines) {
+          if (line[0] !== 0 && line[0] === line[1] && line[1] === line[2]) {
+              return line[0];
+          }
+      }
+      return 0;
+  }
+
+  function isBoardFull(board) {
+      for (let row of board) {
+          if (row.includes(0)) return false;
+      }
+      return true;
+  }
+
+  newGameBtn.addEventListener('click', () => {
+      window.location.href = '/';
+  });
+
+  loadGame();
+</script>
+</body>
+</html>
