@@ -2,17 +2,18 @@ package com.example.datasource.repository;
 
 import com.example.datasource.mapper.MapperDomainDatasource;
 import com.example.datasource.model.DSCurrentGame;
-import com.example.datasource.storage.GameStorage;
 import com.example.domain.model.CurrentGame;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
 
+@Repository
 public class GameRepository {
-    private final GameStorage storage;
+    private final CurrentGameDataRepository dataRepository;
 
-    public GameRepository(GameStorage storage) {
-        this.storage = storage;
+    public GameRepository(CurrentGameDataRepository dataRepository) {
+        this.dataRepository = dataRepository;
     }
 
     public void saveGame(CurrentGame game) {
@@ -20,11 +21,11 @@ public class GameRepository {
             throw new IllegalArgumentException("Game cannot be null");
         }
         DSCurrentGame dsGame = MapperDomainDatasource.toDSCurrentGame(game);
-        storage.saveGame(dsGame);
+        dataRepository.save(dsGame);
     }
 
     public Optional<CurrentGame> getGame(UUID id) {
-        return storage.getGame(id)
+        return dataRepository.findById(id)
                 .map(MapperDomainDatasource::toDomainCurrentGame);
     }
 }

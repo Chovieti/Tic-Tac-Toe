@@ -1,10 +1,18 @@
 package com.example.datasource.model;
 
+import jakarta.persistence.*;
+
 import java.util.UUID;
 
+@Entity
+@Table(name = "current_games")
 public class DSCurrentGame {
-    private final UUID id;
+    @Id
+    private UUID id;
+    @Embedded
     private DSGameField field;
+
+    public DSCurrentGame() {}
 
     public DSCurrentGame(UUID id, DSGameField field) {
         this.id = id;
