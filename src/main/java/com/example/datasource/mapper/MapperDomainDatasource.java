@@ -2,8 +2,10 @@ package com.example.datasource.mapper;
 
 import com.example.datasource.model.DSCurrentGame;
 import com.example.datasource.model.DSGameField;
+import com.example.datasource.model.DSUser;
 import com.example.domain.model.CurrentGame;
 import com.example.domain.model.GameField;
+import com.example.domain.model.User;
 
 public class MapperDomainDatasource {
     public static CurrentGame toDomainCurrentGame(DSCurrentGame game) {
@@ -15,6 +17,10 @@ public class MapperDomainDatasource {
         return new GameField(copyField(field.getField()));
     }
 
+    public static User toDomainUser(DSUser user) {
+        return new User(user.getId(), user.getLogin(), user.getPassword());
+    }
+
     public static DSCurrentGame toDSCurrentGame(CurrentGame game) {
         DSGameField dsField = toDSField(game.getField());
         return new DSCurrentGame(game.getId(), dsField);
@@ -22,6 +28,10 @@ public class MapperDomainDatasource {
 
     private static DSGameField toDSField(GameField field) {
         return new DSGameField(copyField(field.getField()));
+    }
+
+    public static DSUser toDSUser(User user) {
+        return new DSUser();
     }
 
     private static int[][] copyField(int[][] field) {
