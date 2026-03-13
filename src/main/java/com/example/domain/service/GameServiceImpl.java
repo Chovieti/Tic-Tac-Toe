@@ -1,4 +1,4 @@
-package com.example.datasource.service;
+package com.example.domain.service;
 
 import com.example.datasource.repository.GameRepository;
 import com.example.domain.exception.GameNotFoundException;

@@ -29,7 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthResponse> authenticate(@RequestHeader("Autorization") String authHeader) {
+    public ResponseEntity<AuthResponse> authenticate(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Basic ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

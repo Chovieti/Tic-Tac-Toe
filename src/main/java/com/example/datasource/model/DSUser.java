@@ -8,7 +8,7 @@ import java.util.UUID;
 @Table(name = "users")
 public class DSUser {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     @Column(unique = true, nullable = false)
     private String login;
@@ -17,8 +17,7 @@ public class DSUser {
 
     public DSUser() {}
 
-    public DSUser(UUID id, String login, String password) {
-        this.id = id;
+    public DSUser(String login, String password) {
         this.login = login;
         this.password = password;
     }
