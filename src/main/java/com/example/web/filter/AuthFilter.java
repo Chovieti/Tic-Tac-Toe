@@ -1,7 +1,9 @@
 package com.example.web.filter;
 
+import com.example.domain.exception.BadCredentialsException;
 import com.example.domain.service.AuthService;
-import com.example.web.model.WebUser;
+import com.example.web.model.ErrorResponse;
+import com.example.web.model.SecurityUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -12,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -48,18 +51,25 @@ public class AuthFilter extends GenericFilterBean {
             String[] values = decodedString.split(":", 2);
             if (values.length != 2) throw new IllegalArgumentException("Invalid basic authentication format");
             String login = values[0], password = values[1];
+            if (login.isEmpty() || password.isEmpty()) {
+                throw new BadCredentialsException("Login or password cannot be empty");
+            }
             UUID userId = service.authenticate(login, password);
 
-            WebUser user = new WebUser(userId, login, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+            SecurityUserDetails user = new SecurityUserDetails(userId, login, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities());
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             chain.doFilter(request, response);
-        } catch (Exception e) {
+        } catch (BadCredentialsException ex) {
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.getWriter().write("Authentication failed");
+            httpResponse.setContentType("application/json");
+            ErrorResponse errorResponse = new ErrorResponse("Unauthorized", ex.getMessage());
+            new ObjectMapper().writeValue(response.getWriter(), errorResponse);
+//            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            httpResponse.getWriter().write("Authentication failed");
         }
     }
 }

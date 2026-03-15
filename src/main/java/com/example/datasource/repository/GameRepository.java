@@ -5,6 +5,7 @@ import com.example.datasource.model.DSCurrentGame;
 import com.example.domain.model.CurrentGame;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,5 +28,12 @@ public class GameRepository {
     public Optional<CurrentGame> getGame(UUID id) {
         return dataRepository.findById(id)
                 .map(MapperDomainDatasource::toDomainCurrentGame);
+    }
+
+    public List<CurrentGame> findAvailableGames(UUID id) {
+        return dataRepository.findAvailableGames(id)
+                .stream()
+                .map(MapperDomainDatasource::toDomainCurrentGame)
+                .toList();
     }
 }

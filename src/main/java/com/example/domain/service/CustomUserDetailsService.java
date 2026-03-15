@@ -2,7 +2,7 @@ package com.example.domain.service;
 
 import com.example.datasource.model.DSUser;
 import com.example.datasource.repository.UserRepository;
-import com.example.web.model.WebUser;
+import com.example.web.model.SecurityUserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,7 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         DSUser user = repository.findByLogin(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        return new WebUser(
+        return new SecurityUserDetails(
                 user.getId(),
                 user.getLogin(),
                 user.getPassword(),

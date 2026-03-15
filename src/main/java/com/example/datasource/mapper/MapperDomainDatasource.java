@@ -10,7 +10,14 @@ import com.example.domain.model.User;
 public class MapperDomainDatasource {
     public static CurrentGame toDomainCurrentGame(DSCurrentGame game) {
         GameField domainField = toDomainField(game.getField());
-        return new CurrentGame(game.getId(), domainField);
+        return new CurrentGame(
+                game.getId(),
+                domainField,
+                game.getType(),
+                game.getStatus(),
+                game.getPlayerXId(),
+                game.getPlayerOId()
+        );
     }
 
     private static GameField toDomainField(DSGameField field) {
@@ -23,7 +30,14 @@ public class MapperDomainDatasource {
 
     public static DSCurrentGame toDSCurrentGame(CurrentGame game) {
         DSGameField dsField = toDSField(game.getField());
-        return new DSCurrentGame(game.getId(), dsField);
+        return new DSCurrentGame(
+                game.getId(),
+                dsField,
+                game.getType(),
+                game.getStatus(),
+                game.getPlayerXId(),
+                game.getPlayerOId()
+        );
     }
 
     private static DSGameField toDSField(GameField field) {

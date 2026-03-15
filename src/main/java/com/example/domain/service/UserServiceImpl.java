@@ -3,6 +3,7 @@ package com.example.domain.service;
 import com.example.datasource.mapper.MapperDomainDatasource;
 import com.example.datasource.model.DSUser;
 import com.example.datasource.repository.UserRepository;
+import com.example.domain.exception.UserDoesntExistsException;
 import com.example.domain.model.User;
 import com.example.domain.service.UserService;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class UserServiceImpl implements UserService {
         }
         DSUser newUser = new DSUser(login, encodedPassword);
         DSUser savedUser = repository.save(newUser);
-        return MapperDomainDatasource.toDomainUser(newUser);
+        return MapperDomainDatasource.toDomainUser(savedUser);
     }
 
     @Override
@@ -43,5 +44,12 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean existsByLogin(String login) {
         return findByLogin(login).isPresent();
+    }
+
+    @Override
+    public User findById(UUID id) {
+        Optional<DSUser> user = repository.findById(id);
+        if (user.isEmpty()) throw new UserDoesntExistsException("User with id: " + id + " doesn't exists");
+        return MapperDomainDatasource.toDomainUser(user.get());
     }
 }

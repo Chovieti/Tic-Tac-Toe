@@ -23,10 +23,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public UUID register(SignUpRequest request) {
+        String encoded = passwordEncoder.encode(request.password());
+        if (request.login().isEmpty() || encoded.isEmpty()) {
+            throw new BadCredentialsException("Login or password cannot be empty");
+        }
         if (service.existsByLogin(request.login())) {
             throw new UserAlreadyExistsException("User with login " + request.login() + " already exists");
         }
-        String encoded = passwordEncoder.encode(request.password());
         User newUser = service.registerUser(request.login(), encoded);
         return newUser.getId();
     }

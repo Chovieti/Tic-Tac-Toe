@@ -2,13 +2,22 @@ package com.example.web.mapper;
 
 import com.example.domain.model.CurrentGame;
 import com.example.domain.model.GameField;
+import com.example.domain.model.User;
 import com.example.web.model.WebCurrentGame;
 import com.example.web.model.WebGameField;
+import com.example.web.model.WebUser;
 
 public class MapperDomainWeb {
     public static CurrentGame toDomainCurrentGame(WebCurrentGame game) {
-        GameField domainField = toDomainField(game.getField());
-        return new CurrentGame(game.getId(), domainField);
+        GameField domainField = toDomainField(game.field());
+        return new CurrentGame(
+                game.id(),
+                domainField,
+                game.type(),
+                game.status(),
+                game.playerXId(),
+                game.playerOId()
+        );
     }
 
     private static GameField toDomainField(WebGameField field) {
@@ -17,11 +26,22 @@ public class MapperDomainWeb {
 
     public static WebCurrentGame toWebCurrentGame(CurrentGame game) {
         WebGameField webField = toWebField(game.getField());
-        return new WebCurrentGame(game.getId(), webField);
+        return new WebCurrentGame(
+                game.getId(),
+                webField,
+                game.getType(),
+                game.getStatus(),
+                game.getPlayerXId(),
+                game.getPlayerOId()
+        );
     }
 
     private static WebGameField toWebField(GameField field) {
         return new WebGameField(copyField(field.getField()));
+    }
+
+    public static WebUser toWebUser(User user) {
+        return new WebUser(user.getId(), user.getLogin());
     }
 
     private static int[][] copyField(int[][] field) {

@@ -4,6 +4,7 @@ import com.example.domain.exception.BadCredentialsException;
 import com.example.domain.service.AuthService;
 import com.example.web.model.AuthResponse;
 import com.example.web.model.SignUpRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody SignUpRequest request) {
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody SignUpRequest request) {
         UUID userId = service.register(request);
         AuthResponse response = new AuthResponse(userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -54,6 +55,5 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
     }
 }
