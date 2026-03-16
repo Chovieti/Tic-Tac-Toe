@@ -193,8 +193,8 @@ public class GameServiceImpl implements GameService {
     private int minimax(int[][] field, int depth, boolean isMaximizing) {
         // Сначала проверка на победу
         int result = checkWinner(field);
-        if (result == 1) return 20 - depth;
-        if (result == -1) return depth - 20;
+        if (result == 1) return depth - 20;
+        if (result == -1) return 20 - depth;
 
         if (fieldIsFilled(field)) return depth;
 
