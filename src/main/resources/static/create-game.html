@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Создать игру</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    select, button { padding: 10px; font-size: 16px; margin: 10px; }
+    a { display: block; margin-top: 20px; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<h1>Создать новую игру</h1>
+<label>
+  Тип игры:
+  <select id="gameType">
+    <option value="VS_COMPUTER">Против компьютера</option>
+    <option value="VS_PLAYER">Против игрока</option>
+  </select>
+</label>
+<br/>
+<button id="createBtn">Создать</button>
+<a href="/main.html">На главную</a>
+
+<script>
+  if (!isAuthenticated()) window.location.href = '/login.html';
+
+  document.getElementById('createBtn').addEventListener('click', async () => {
+      const gameType = document.getElementById('gameType').value;
+      try {
+          const response = await authFetch(`/game?gameType=${gameType}`, { method: 'POST' });
+          const game = await response.json();
+          window.location.href = `/game.html?id=${game.id}`;
+      } catch (e) {
+          alert(e.message);
+      }
+  });
+</script>
+</body>
+</html>

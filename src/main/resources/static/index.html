@@ -2,39 +2,18 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Крестики-нолики — новая игра</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 100px;
-        }
-        button {
-            padding: 15px 30px;
-            font-size: 20px;
-            cursor: pointer;
-        }
-    </style>
+    <title>Крестики-нолики</title>
+    <script src="/auth.js"></script>
 </head>
 <body>
-<h1>Добро пожаловать в игру «Крестики-нолики»</h1>
-<button id="newGameBtn">Начать новую игру</button>
-
 <script>
-    // API находится на том же хосте, поэтому base URL пустой
-    const API_BASE_URL = '';
-
-    document.getElementById('newGameBtn').addEventListener('click', async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/game`);
-            if (!response.ok) throw new Error('Ошибка создания игры');
-            const game = await response.json();
-            // Перенаправляем на страницу игры с ID в параметре
-            window.location.href = `game.html?id=${game.id}`;
-        } catch (error) {
-            alert('Не удалось создать игру: ' + error.message);
+    (function() {
+        if (isAuthenticated()) {
+            window.location.href = '/main.html';
+        } else {
+            window.location.href = '/login.html';
         }
-    });
+    })();
 </script>
 </body>
 </html>

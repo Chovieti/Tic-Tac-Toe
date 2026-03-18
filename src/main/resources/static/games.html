@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Доступные игры</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+    table { margin: 0 auto; border-collapse: collapse; }
+    th, td { border: 1px solid #333; padding: 8px 12px; }
+    button { padding: 5px 10px; }
+    .error { color: red; }
+    a { display: block; margin-top: 20px; }
+    .your-game { color: green; font-weight: bold; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<h1>Доступные игры</h1>
+<div id="gamesContainer"></div>
+<div id="error" class="error"></div>
+<a href="/main.html">На главную</a>
+
+<script>
+  if (!isAuthenticated()) window.location.href = '/login.html';
+
+  const currentUserId = getUserId();
+
+  async function loadGames() {
+      try {
+          const response = await authFetch('/game/available');
+          const games = await response.json();
+          const container = document.getElementById('gamesContainer');
+          if (games.length === 0) {
+              container.innerHTML = '<p>Нет доступных игр.</p>';
+              return;
+          }
+          let html = '<table><tr><th>ID игры</th><th>Тип</th><th>Статус</th><th>Игрок X</th><th>Игрок O</th><th>Действие</th></tr>';
+          games.forEach(game => {
+              const isJoinable = game.type === 'VS_PLAYER' && game.status === 'WAITING' && game.playerOId === null;
+              const isYourGame = game.playerXId === currentUserId;
+              let actionCell = '—';
+              if (isJoinable) {
+                  if (isYourGame) {
+                      actionCell = '<span class="your-game">Ваша игра</span>';
+                  } else {
+                      actionCell = `<button onclick="joinGame('${game.id}')">Присоединиться</button>`;
+                  }
+              } else if (game.playerXId === currentUserId || game.playerOId === currentUserId) {
+                  actionCell = `<button onclick="goToGame('${game.id}')">Перейти</button>`;
+              }
+              html += `<tr>
+                  <td>${game.id}</td>
+                  <td>${game.type}</td>
+                  <td>${game.status}</td>
+                  <td>${game.playerXId}</td>
+                  <td>${game.playerOId || '—'}</td>
+                  <td>${actionCell}</td>
+              </tr>`;
+          });
+          html += '</table>';
+          container.innerHTML = html;
+      } catch (e) {
+          document.getElementById('error').textContent = e.message;
+      }
+  }
+
+  window.joinGame = async (gameId) => {
+      try {
+          await authFetch(`/game/${gameId}/join`, { method: 'POST' });
+          window.location.href = `/game.html?id=${gameId}`;
+      } catch (e) {
+          document.getElementById('error').textContent = e.message;
+      }
+  };
+
+  window.goToGame = (gameId) => {
+      window.location.href = `/game.html?id=${gameId}`;
+  };
+
+  loadGames();
+</script>
+</body>
+</html>

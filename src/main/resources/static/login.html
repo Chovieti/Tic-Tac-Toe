@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход / Регистрация</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    input, button { padding: 10px; margin: 5px; font-size: 16px; }
+    .error { color: red; margin-top: 10px; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<h1>Добро пожаловать в Крестики-нолики</h1>
+<div>
+  <input type="text" id="login" placeholder="Логин" /><br/>
+  <input type="password" id="password" placeholder="Пароль" /><br/>
+  <button id="loginBtn">Войти</button>
+  <button id="registerBtn">Зарегистрироваться</button>
+</div>
+<div id="message" class="error"></div>
+
+<script>
+  const loginInput = document.getElementById('login');
+  const passwordInput = document.getElementById('password');
+  const messageDiv = document.getElementById('message');
+
+  async function authenticate(login, password) {
+      const token = btoa(login + ':' + password);
+      const response = await fetch('/auth/authenticate', {
+          method: 'POST',
+          headers: { 'Authorization': 'Basic ' + token }
+      });
+      if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.message || 'Ошибка аутентификации');
+      }
+      const data = await response.json();
+      saveCredentials(login, password);
+      saveUserId(data.userId);
+      window.location.href = '/main.html';
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+      const login = loginInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!login || !password) {
+          messageDiv.textContent = 'Заполните оба поля';
+          return;
+      }
+      try {
+          await authenticate(login, password);
+      } catch (e) {
+          messageDiv.textContent = e.message;
+      }
+  });
+
+  document.getElementById('registerBtn').addEventListener('click', async () => {
+      const login = loginInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!login || !password) {
+          messageDiv.textContent = 'Заполните оба поля';
+          return;
+      }
+      try {
+          const response = await fetch('/auth/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ login, password })
+          });
+          if (!response.ok) {
+              const error = await response.json().catch(() => ({}));
+              throw new Error(error.message || 'Ошибка регистрации');
+          }
+          // После успешной регистрации сразу выполняем вход
+          await authenticate(login, password);
+      } catch (e) {
+          messageDiv.textContent = e.message;
+      }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Поиск пользователя</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+    input, button { padding: 8px; margin: 5px; }
+    .result { margin-top: 20px; border: 1px solid #ccc; padding: 10px; display: inline-block; }
+    .error { color: red; }
+    a { display: block; margin-top: 20px; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<h1>Поиск пользователя</h1>
+<input type="text" id="userId" placeholder="UUID пользователя" size="40" />
+<button id="searchBtn">Найти</button>
+<div id="result" class="result" style="display:none;"></div>
+<div id="error" class="error"></div>
+<a href="/main.html">На главную</a>
+
+<script>
+  if (!isAuthenticated()) window.location.href = '/login.html';
+
+  document.getElementById('searchBtn').addEventListener('click', async () => {
+      const userId = document.getElementById('userId').value.trim();
+      if (!userId) {
+          document.getElementById('error').textContent = 'Введите UUID';
+          return;
+      }
+      try {
+          const response = await authFetch(`/user/${userId}`);
+          const user = await response.json();
+          document.getElementById('result').style.display = 'block';
+          document.getElementById('result').innerHTML = `
+              <p><strong>ID:</strong> ${user.userId}</p>
+              <p><strong>Логин:</strong> ${user.login}</p>
+          `;
+          document.getElementById('error').textContent = '';
+      } catch (e) {
+          document.getElementById('result').style.display = 'none';
+          document.getElementById('error').textContent = e.message;
+      }
+  });
+</script>
+</body>
+</html>
