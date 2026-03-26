@@ -14,11 +14,11 @@ public class SecurityUserDetails implements UserDetails {
     private final String password;
     private final List<GrantedAuthority> authorities;
 
-    public SecurityUserDetails(UUID id, String login, String password, List<GrantedAuthority> authorities) {
+    public SecurityUserDetails(UUID id, String login, String password, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.login = login;
         this.password = password;
-        this.authorities = authorities;
+        this.authorities = List.copyOf(authorities);
     }
 
     @Override
