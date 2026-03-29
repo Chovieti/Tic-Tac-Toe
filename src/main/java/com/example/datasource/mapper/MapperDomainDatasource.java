@@ -16,7 +16,8 @@ public class MapperDomainDatasource {
                 game.getType(),
                 game.getStatus(),
                 game.getPlayerXId(),
-                game.getPlayerOId()
+                game.getPlayerOId(),
+                game.getCreationDate()
         );
     }
 
@@ -36,7 +37,8 @@ public class MapperDomainDatasource {
                 game.getType(),
                 game.getStatus(),
                 game.getPlayerXId(),
-                game.getPlayerOId()
+                game.getPlayerOId(),
+                game.getCreationDate()
         );
     }
 

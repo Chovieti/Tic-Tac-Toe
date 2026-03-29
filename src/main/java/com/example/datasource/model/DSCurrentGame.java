@@ -4,6 +4,7 @@ import com.example.domain.model.GameStatus;
 import com.example.domain.model.GameType;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -28,16 +29,20 @@ public class DSCurrentGame {
     @Column(name = "player_o_id")
     private UUID playerOId;
 
+    @Column(name = "creation_date")
+    private LocalDateTime creationDate;
+
 
     public DSCurrentGame() {}
 
-    public DSCurrentGame(UUID id, DSGameField field, GameType type, GameStatus status, UUID playerXid, UUID playerOid) {
+    public DSCurrentGame(UUID id, DSGameField field, GameType type, GameStatus status, UUID playerXid, UUID playerOid, LocalDateTime creationDate) {
         this.id = id;
         this.field = field;
         this.type = type;
         this.status = status;
         this.playerXId = playerXid;
         this.playerOId = playerOid;
+        this.creationDate = creationDate;
     }
 
     public UUID getId() {
@@ -76,4 +81,6 @@ public class DSCurrentGame {
     public void setPlayerOId(UUID playerOid) {
         this.playerOId = playerOid;
     }
+    public LocalDateTime getCreationDate() { return creationDate; }
+    public void setCreationDate(LocalDateTime creationDate) { this.creationDate = creationDate; }
 }

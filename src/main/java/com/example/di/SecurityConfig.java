@@ -37,12 +37,11 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
-                        .requestMatchers(
-                                "/auth/register",
+                        .requestMatchers("/auth/register",
                                 "/auth/authenticate",
                                 "/auth/authorization",
                                 "/auth/token").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().hasRole("USER")
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(((request, response, authException) -> {

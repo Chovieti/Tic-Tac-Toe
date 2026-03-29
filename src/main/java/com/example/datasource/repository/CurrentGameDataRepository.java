@@ -12,7 +12,14 @@ public interface CurrentGameDataRepository extends CrudRepository<DSCurrentGame,
     @Query("""
            SELECT g FROM DSCurrentGame g
            WHERE g.status NOT IN ('DRAW', 'WIN_PLAYER_X', 'WIN_PLAYER_O')
-           AND (g.status = 'WAITING' OR g.playerXId = :userId OR g.playerOId = :userId) 
+           AND (g.status = 'WAITING' OR g.playerXId = :userId OR g.playerOId = :userId)
            """)
     List<DSCurrentGame> findAvailableGames(@Param("userId") UUID userId);
+
+    @Query("""
+           SELECT g FROM DSCurrentGame g
+           WHERE g.status IN ('DRAW', 'WIN_PLAYER_X', 'WIN_PLAYER_O')
+           AND (g.playerXId = :userId OR g.playerOId = :userId)
+           """)
+    List<DSCurrentGame> findAllFinishedGamesByUserId(@Param("userId") UUID userId);
 }

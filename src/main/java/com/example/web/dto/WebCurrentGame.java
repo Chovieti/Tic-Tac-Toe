@@ -3,6 +3,7 @@ package com.example.web.dto;
 import com.example.domain.model.GameStatus;
 import com.example.domain.model.GameType;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record WebCurrentGame(
@@ -11,5 +12,6 @@ public record WebCurrentGame(
         GameType type,
         GameStatus status,
         UUID playerXId,
-        UUID playerOId
+        UUID playerOId,
+        LocalDateTime creationDate
 ) {}

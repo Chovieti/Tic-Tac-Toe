@@ -36,4 +36,11 @@ public class GameRepository {
                 .map(MapperDomainDatasource::toDomainCurrentGame)
                 .toList();
     }
+
+    public List<CurrentGame> findAllFinishedGamesByUserId(UUID id) {
+        return dataRepository.findAllFinishedGamesByUserId(id)
+                .stream()
+                .map(MapperDomainDatasource::toDomainCurrentGame)
+                .toList();
+    }
 }
