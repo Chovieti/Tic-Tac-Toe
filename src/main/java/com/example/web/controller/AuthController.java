@@ -2,8 +2,11 @@ package com.example.web.controller;
 
 import com.example.domain.exception.BadCredentialsException;
 import com.example.domain.service.AuthService;
+import com.example.web.dto.JwtRequest;
+import com.example.web.dto.JwtResponse;
 import com.example.web.model.AuthResponse;
 import com.example.web.dto.SignUpRequest;
+import com.example.web.model.JwtAuthentication;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,5 +58,24 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+    @PostMapping("/authorization")
+    public ResponseEntity<JwtResponse> authorization(@RequestBody JwtRequest request) {
+        return ResponseEntity.ok(service.authenticate(request));
+    }
+
+    @PostMapping("/token")
+    public ResponseEntity<JwtResponse> getNewAccessToken(@RequestBody String refreshToken) {
+        return ResponseEntity.ok(service.refreshAccessToken(refreshToken));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponse> getNewRefreshToken(@RequestBody String refreshToken) {
+        return ResponseEntity.ok(service.refreshRefreshToken(refreshToken));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<JwtAuthentication> getMe() {
+        return ResponseEntity.ok(service.getAuthentication());
     }
 }
