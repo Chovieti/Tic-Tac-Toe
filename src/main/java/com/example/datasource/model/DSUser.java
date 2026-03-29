@@ -22,6 +22,12 @@ public class DSUser {
         this.password = password;
     }
 
+    public DSUser(UUID id, String login, String password) {
+        this.id = id;
+        this.login = login;
+        this.password = password;
+    }
+
     public UUID getId() {
         return id;
     }

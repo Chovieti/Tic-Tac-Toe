@@ -3,9 +3,11 @@ package com.example.web.mapper;
 import com.example.domain.model.CurrentGame;
 import com.example.domain.model.GameField;
 import com.example.domain.model.User;
-import com.example.web.model.WebCurrentGame;
-import com.example.web.model.WebGameField;
-import com.example.web.model.WebUser;
+import com.example.web.dto.WebCurrentGame;
+import com.example.web.dto.WebGameField;
+import com.example.web.dto.WebUser;
+
+import java.util.HashSet;
 
 public class MapperDomainWeb {
     public static CurrentGame toDomainCurrentGame(WebCurrentGame game) {
@@ -21,7 +23,7 @@ public class MapperDomainWeb {
     }
 
     private static GameField toDomainField(WebGameField field) {
-        return new GameField(copyField(field.getField()));
+        return new GameField(copyField(field.field()));
     }
 
     public static WebCurrentGame toWebCurrentGame(CurrentGame game) {

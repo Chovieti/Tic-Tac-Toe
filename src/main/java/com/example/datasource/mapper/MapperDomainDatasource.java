@@ -45,7 +45,7 @@ public class MapperDomainDatasource {
     }
 
     public static DSUser toDSUser(User user) {
-        return new DSUser();
+        return new DSUser(user.getId(), user.getLogin(), user.getPassword());
     }
 
     private static int[][] copyField(int[][] field) {

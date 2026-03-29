@@ -3,7 +3,7 @@ package com.example.web.controller;
 import com.example.domain.exception.BadCredentialsException;
 import com.example.domain.service.AuthService;
 import com.example.web.model.AuthResponse;
-import com.example.web.model.SignUpRequest;
+import com.example.web.dto.SignUpRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

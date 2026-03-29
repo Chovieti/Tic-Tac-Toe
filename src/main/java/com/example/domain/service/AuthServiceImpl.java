@@ -3,7 +3,7 @@ package com.example.domain.service;
 import com.example.domain.exception.BadCredentialsException;
 import com.example.domain.exception.UserAlreadyExistsException;
 import com.example.domain.model.User;
-import com.example.web.model.SignUpRequest;
+import com.example.web.dto.SignUpRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

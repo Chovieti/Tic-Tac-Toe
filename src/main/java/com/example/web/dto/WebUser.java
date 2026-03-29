@@ -1,4 +1,4 @@
-package com.example.web.model;
+package com.example.web.dto;
 
 import java.util.UUID;
 
