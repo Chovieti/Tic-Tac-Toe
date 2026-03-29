@@ -3,7 +3,7 @@ package com.example.di;
 import com.example.datasource.repository.UserRepository;
 import com.example.domain.service.AuthService;
 import com.example.domain.service.CustomUserDetailsService;
-import com.example.web.filter.AuthFilter;
+import com.example.web.security.filter.AuthFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

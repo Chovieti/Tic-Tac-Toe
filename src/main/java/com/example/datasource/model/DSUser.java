@@ -37,6 +37,13 @@ public class DSUser {
         this.roles = roles;
     }
 
+    public DSUser(UUID id, String login, String password, Set<Roles> roles) {
+        this.id = id;
+        this.login = login;
+        this.password = password;
+        this.roles = roles;
+    }
+
     public UUID getId() {
         return id;
     }

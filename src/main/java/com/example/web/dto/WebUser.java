@@ -1,4 +1,4 @@
-package com.example.web.model;
+package com.example.web.dto;
 
 import com.example.domain.model.Roles;
 

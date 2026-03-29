@@ -1,6 +1,6 @@
 package com.example.domain.service;
 
-import com.example.web.model.SignUpRequest;
+import com.example.web.dto.SignUpRequest;
 
 import java.util.UUID;
 

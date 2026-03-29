@@ -2,7 +2,9 @@ package com.example.domain.service;
 
 import com.example.datasource.model.DSUser;
 import com.example.datasource.repository.UserRepository;
+import com.example.domain.model.Roles;
 import com.example.web.model.SecurityUserDetails;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,11 +25,15 @@ public class CustomUserDetailsService implements UserDetailsService {
         DSUser user = repository.findByLogin(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        List<GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> (GrantedAuthority) role)
+                .toList();
+
         return new SecurityUserDetails(
                 user.getId(),
                 user.getLogin(),
                 user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                authorities
         );
     }
 }

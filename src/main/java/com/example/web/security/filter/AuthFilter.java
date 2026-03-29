@@ -1,4 +1,4 @@
-package com.example.web.filter;
+package com.example.web.security.filter;
 
 import com.example.domain.exception.BadCredentialsException;
 import com.example.domain.service.AuthService;

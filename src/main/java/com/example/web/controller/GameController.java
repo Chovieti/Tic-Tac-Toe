@@ -3,8 +3,8 @@ package com.example.web.controller;
 import com.example.domain.model.GameType;
 import com.example.domain.service.GameService;
 import com.example.web.mapper.MapperDomainWeb;
-import com.example.web.model.WebCurrentGame;
-import com.example.web.model.WebGameField;
+import com.example.web.dto.WebCurrentGame;
+import com.example.web.dto.WebGameField;
 import com.example.web.model.SecurityUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,7 +65,7 @@ public class GameController {
                                                    @AuthenticationPrincipal SecurityUserDetails user,
                                                    @RequestBody WebGameField field) {
         WebCurrentGame response =
-                MapperDomainWeb.toWebCurrentGame(service.processUserMove(gameId, user.getId(), field.getField()));
+                MapperDomainWeb.toWebCurrentGame(service.processUserMove(gameId, user.getId(), field.field()));
         return ResponseEntity.ok(response);
     }
 }

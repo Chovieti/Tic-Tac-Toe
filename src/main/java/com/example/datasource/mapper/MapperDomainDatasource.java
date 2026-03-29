@@ -25,7 +25,7 @@ public class MapperDomainDatasource {
     }
 
     public static User toDomainUser(DSUser user) {
-        return new User(user.getId(), user.getLogin(), user.getPassword());
+        return new User(user.getId(), user.getLogin(), user.getPassword(), user.getRoles());
     }
 
     public static DSCurrentGame toDSCurrentGame(CurrentGame game) {
@@ -45,7 +45,7 @@ public class MapperDomainDatasource {
     }
 
     public static DSUser toDSUser(User user) {
-        return new DSUser();
+        return new DSUser(user.getId(), user.getLogin(), user.getPassword(), user.getRoles());
     }
 
     private static int[][] copyField(int[][] field) {
