@@ -57,7 +57,7 @@ public class GameController {
             @AuthenticationPrincipal JwtAuthentication auth
     ) {
         UUID userId = UUID.fromString(auth.getName());
-        List<WebCurrentGame> games = gameService.getAvailableGames(userId)
+        List<WebCurrentGame> games = gameService.getFinishedGames(userId)
                 .stream()
                 .map(MapperDomainWeb::toWebCurrentGame)
                 .toList();

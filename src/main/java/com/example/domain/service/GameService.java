@@ -15,6 +15,8 @@ public interface GameService {
     CurrentGame getGame(UUID gameId);
     // Метод получения всех доступных игр
     List<CurrentGame> getAvailableGames(UUID userId);
+    // Метод получения всех завершенных игр
+    List<CurrentGame> getFinishedGames(UUID userId);
     // Метод присоединения к игре
     CurrentGame joinGame(UUID gameId, UUID userId);
     // Метод обработки хода пользователя (нужно расширить, чтобы смотрел на userId)
