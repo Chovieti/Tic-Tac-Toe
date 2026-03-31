@@ -3,11 +3,13 @@ package com.example.datasource.repository;
 import com.example.datasource.mapper.MapperDomainDatasource;
 import com.example.datasource.model.DSCurrentGame;
 import com.example.domain.model.CurrentGame;
+import com.example.domain.model.LeaderboardEntry;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 public class GameRepository {
@@ -42,5 +44,16 @@ public class GameRepository {
                 .stream()
                 .map(MapperDomainDatasource::toDomainCurrentGame)
                 .toList();
+    }
+
+    public List<LeaderboardEntry> getLeaderboard(int limit) {
+        return dataRepository.getLeaderboardRaw(limit)
+                .stream()
+                .map(row -> new LeaderboardEntry(
+                        (UUID) row[0],
+                        (String) row[1],
+                        ((Number) row[2]).doubleValue()
+                ))
+                .collect(Collectors.toList());
     }
 }

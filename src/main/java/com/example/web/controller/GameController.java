@@ -2,6 +2,7 @@ package com.example.web.controller;
 
 import com.example.domain.model.GameType;
 import com.example.domain.service.GameService;
+import com.example.web.dto.LeaderboardResponse;
 import com.example.web.mapper.MapperDomainWeb;
 import com.example.web.dto.WebCurrentGame;
 import com.example.web.dto.WebGameField;
@@ -62,6 +63,15 @@ public class GameController {
                 .map(MapperDomainWeb::toWebCurrentGame)
                 .toList();
         return ResponseEntity.ok(games);
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<LeaderboardResponse>> getLeaderboard(@RequestParam(defaultValue = "10") int limit) {
+        List<LeaderboardResponse> response = gameService.getLeaderboard(limit)
+                .stream()
+                .map(entry -> new LeaderboardResponse(entry.userId(), entry.login(), entry.winRatio()))
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{gameId}/join")
