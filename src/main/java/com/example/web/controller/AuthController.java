@@ -3,6 +3,7 @@ package com.example.web.controller;
 import com.example.domain.service.AuthService;
 import com.example.web.dto.JwtRequest;
 import com.example.web.dto.JwtResponse;
+import com.example.web.dto.RefreshJwtRequest;
 import com.example.web.model.AuthResponse;
 import com.example.web.dto.SignUpRequest;
 import com.example.web.model.JwtAuthentication;
@@ -35,13 +36,13 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    public ResponseEntity<JwtResponse> getNewAccessToken(@RequestBody String refreshToken) {
-        return ResponseEntity.ok(service.refreshAccessToken(refreshToken));
+    public ResponseEntity<JwtResponse> getNewAccessToken(@RequestBody RefreshJwtRequest request) {
+        return ResponseEntity.ok(service.refreshAccessToken(request.refreshToken()));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<JwtResponse> getNewRefreshToken(@RequestBody String refreshToken) {
-        return ResponseEntity.ok(service.refreshRefreshToken(refreshToken));
+    public ResponseEntity<JwtResponse> getNewRefreshToken(@RequestBody RefreshJwtRequest request) {
+        return ResponseEntity.ok(service.refreshRefreshToken(request.refreshToken()));
     }
 
     @GetMapping("/me")
