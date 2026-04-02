@@ -42,6 +42,7 @@ public class SecurityConfig {
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher(
+                        "/", "/**/*.html", "/**/*.js", "/**/*.css",
                         "/auth/register",
                         "/auth/authorization",
                         "/auth/token",
@@ -60,7 +61,6 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
                         .anyRequest().hasRole("USER")
                 )
                 .exceptionHandling(exception -> exception

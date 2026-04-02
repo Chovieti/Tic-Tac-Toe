@@ -25,19 +25,36 @@
   const passwordInput = document.getElementById('password');
   const messageDiv = document.getElementById('message');
 
-  async function authenticate(login, password) {
-      const token = btoa(login + ':' + password);
-      const response = await fetch('/auth/authenticate', {
-          method: 'POST',
-          headers: { 'Authorization': 'Basic ' + token }
-      });
-      if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.message || 'Ошибка аутентификации');
+  async function doAuth(login, password, isRegister) {
+      if (isRegister) {
+          const regResp = await fetch('/auth/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ login, password })
+          });
+          if (!regResp.ok) {
+              const err = await regResp.json().catch(() => ({}));
+              throw new Error(err.message || 'Ошибка регистрации');
+          }
       }
-      const data = await response.json();
-      saveCredentials(login, password);
-      saveUserId(data.userId);
+
+      const authResp = await fetch('/auth/authorization', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login, password })
+      });
+      if (!authResp.ok) {
+          const err = await authResp.json().catch(() => ({}));
+          throw new Error(err.message || 'Ошибка аутентификации');
+      }
+      const { accessToken, refreshToken } = await authResp.json();
+      saveTokens(accessToken, refreshToken);
+      saveUserLogin(login);
+
+      // Получаем userId через /auth/me
+      const userInfo = await fetchCurrentUser();
+      saveUserId(userInfo.userId);
+
       window.location.href = '/main.html';
   }
 
@@ -49,7 +66,7 @@
           return;
       }
       try {
-          await authenticate(login, password);
+          await doAuth(login, password, false);
       } catch (e) {
           messageDiv.textContent = e.message;
       }
@@ -63,17 +80,7 @@
           return;
       }
       try {
-          const response = await fetch('/auth/register', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ login, password })
-          });
-          if (!response.ok) {
-              const error = await response.json().catch(() => ({}));
-              throw new Error(error.message || 'Ошибка регистрации');
-          }
-          // После успешной регистрации сразу выполняем вход
-          await authenticate(login, password);
+          await doAuth(login, password, true);
       } catch (e) {
           messageDiv.textContent = e.message;
       }
