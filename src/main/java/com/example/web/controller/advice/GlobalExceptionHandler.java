@@ -31,6 +31,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredential(BadCredentialsException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "Authentication failed", ex.getMessage()
+        );
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         ErrorResponse error = new ErrorResponse("Unable to create user", ex.getMessage());
@@ -65,6 +73,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGameOver(GameOverException ex) {
         ErrorResponse error = new ErrorResponse("Game Over", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorResponse error = new ErrorResponse("Bad Request", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)

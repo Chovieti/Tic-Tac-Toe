@@ -6,8 +6,6 @@ import com.example.web.dto.LeaderboardResponse;
 import com.example.web.mapper.MapperDomainWeb;
 import com.example.web.dto.WebCurrentGame;
 import com.example.web.dto.WebGameField;
-import com.example.web.model.JwtAuthentication;
-import com.example.web.model.SecurityUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,11 +25,11 @@ public class GameController {
 
     @PostMapping
     public ResponseEntity<WebCurrentGame> createNewGame(
-            @AuthenticationPrincipal SecurityUserDetails user,
+            @AuthenticationPrincipal UUID userId,
             @RequestParam(required = false) GameType gameType
     ) {
         WebCurrentGame response = MapperDomainWeb.toWebCurrentGame(
-                gameService.createNewGame(user.getId(), gameType == null ? GameType.VS_COMPUTER : gameType)
+                gameService.createNewGame(userId, gameType == null ? GameType.VS_COMPUTER : gameType)
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -44,9 +42,9 @@ public class GameController {
 
     @GetMapping("/available")
     public ResponseEntity<List<WebCurrentGame>> getAvailableGames(
-            @AuthenticationPrincipal SecurityUserDetails user
+            @AuthenticationPrincipal UUID userId
     ) {
-        List<WebCurrentGame> response = gameService.getAvailableGames(user.getId())
+        List<WebCurrentGame> response = gameService.getAvailableGames(userId)
                 .stream()
                 .map(MapperDomainWeb::toWebCurrentGame)
                 .toList();
@@ -55,9 +53,8 @@ public class GameController {
 
     @GetMapping("/finished")
     public ResponseEntity<List<WebCurrentGame>> getFinishedGames(
-            @AuthenticationPrincipal JwtAuthentication auth
+            @AuthenticationPrincipal UUID userId
     ) {
-        UUID userId = UUID.fromString(auth.getName());
         List<WebCurrentGame> games = gameService.getFinishedGames(userId)
                 .stream()
                 .map(MapperDomainWeb::toWebCurrentGame)
@@ -66,7 +63,10 @@ public class GameController {
     }
 
     @GetMapping("/leaderboard")
-    public ResponseEntity<List<LeaderboardResponse>> getLeaderboard(@RequestParam(defaultValue = "10") int limit) {
+    public ResponseEntity<List<LeaderboardResponse>> getLeaderboard(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        if (limit < 1) throw new IllegalArgumentException("Limit must be at least 1");
         List<LeaderboardResponse> response = gameService.getLeaderboard(limit)
                 .stream()
                 .map(entry -> new LeaderboardResponse(entry.userId(), entry.login(), entry.winRatio()))
@@ -77,18 +77,18 @@ public class GameController {
     @PostMapping("/{gameId}/join")
     public ResponseEntity<WebCurrentGame> joinToGame(
             @PathVariable UUID gameId,
-            @AuthenticationPrincipal SecurityUserDetails user
+            @AuthenticationPrincipal UUID userId
     ) {
-        WebCurrentGame response = MapperDomainWeb.toWebCurrentGame(gameService.joinGame(gameId, user.getId()));
+        WebCurrentGame response = MapperDomainWeb.toWebCurrentGame(gameService.joinGame(gameId, userId));
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{gameId}")
     public ResponseEntity<WebCurrentGame> sendGame(@PathVariable UUID gameId,
-                                                   @AuthenticationPrincipal SecurityUserDetails user,
+                                                   @AuthenticationPrincipal UUID userId,
                                                    @RequestBody WebGameField field) {
         WebCurrentGame response =
-                MapperDomainWeb.toWebCurrentGame(gameService.processUserMove(gameId, user.getId(), field.field()));
+                MapperDomainWeb.toWebCurrentGame(gameService.processUserMove(gameId, userId, field.field()));
         return ResponseEntity.ok(response);
     }
 }

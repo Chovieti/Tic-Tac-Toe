@@ -32,8 +32,6 @@ public class JwtProvider {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    //    для генерации токенов используй io.jsonwebtoken.Jwts.builder();
-    //    метод генерации accessToken по User, в токен необходимо сохранить информацию о UUID и роли в claims (в claims сохраняют часть информации об объекте для последующего использования);
     public String generateAccessToken(UUID userId, List<Roles> roles) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessExpiration);
@@ -47,7 +45,7 @@ public class JwtProvider {
                 .signWith(getSigningKey())
                 .compact();
     }
-    //    метод генерации refreshToken по User, в токен необходимо сохранить информацию о UUID в claims;
+
     public String generateRefreshToken(UUID userId) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + refreshExpiration);
@@ -60,8 +58,7 @@ public class JwtProvider {
                 .signWith(getSigningKey())
                 .compact();
     }
-    // Пока буду просто проверять, что нужный тип токена, затем посмотрим
-    //    метод валидации accessToken;
+
     public boolean validateAccessToken(String token) {
         try {
             Claims claims = getClaims(token);
@@ -71,7 +68,7 @@ public class JwtProvider {
             return false;
         }
     }
-    //    метод валидации refreshToken;
+
     public boolean validateRefreshToken(String token) {
         try {
             Claims claims = getClaims(token);
@@ -81,7 +78,7 @@ public class JwtProvider {
             return false;
         }
     }
-    //    метод получения claims.
+
     public Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())

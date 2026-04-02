@@ -9,7 +9,6 @@ import java.util.UUID;
 
 public interface AuthService {
     UUID register(SignUpRequest request);
-    UUID authenticate(String login, String password);
     JwtResponse authenticate(JwtRequest request);
     JwtResponse refreshAccessToken(String refreshToken);
     JwtResponse refreshRefreshToken(String refreshToken);

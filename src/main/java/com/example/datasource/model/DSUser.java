@@ -3,7 +3,6 @@ package com.example.datasource.model;
 import com.example.domain.model.Roles;
 import jakarta.persistence.*;
 
-import javax.management.relation.Role;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;

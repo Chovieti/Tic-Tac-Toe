@@ -45,7 +45,7 @@ public class MapperDomainWeb {
     }
 
     public static WebUser toWebUser(User user) {
-        return new WebUser(user.getId(), user.getLogin(), new HashSet<>());
+        return new WebUser(user.getId(), user.getLogin(), user.getRoles());
     }
 
     private static int[][] copyField(int[][] field) {

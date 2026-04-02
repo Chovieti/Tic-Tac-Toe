@@ -1,32 +1,22 @@
 package com.example.web.security.filter;
 
-import com.example.domain.exception.BadCredentialsException;
-import com.example.domain.service.AuthService;
 import com.example.web.model.ErrorResponse;
 import com.example.web.model.JwtAuthentication;
-import com.example.web.model.SecurityUserDetails;
 import com.example.web.security.JwtProvider;
 import com.example.web.security.JwtUtil;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
 
 public class AuthFilter extends GenericFilterBean {
     private final JwtProvider jwtProvider;
@@ -44,17 +34,16 @@ public class AuthFilter extends GenericFilterBean {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        try {
-            String token = getTokenFromRequest(httpRequest);
-            if (token != null && jwtProvider.validateAccessToken(token)) {
-                Claims claims = jwtProvider.getClaims(token);
-                JwtAuthentication authentication = jwtUtil.createAuthentication(claims);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-            chain.doFilter(request, response);
-        } catch (JwtException | BadCredentialsException ex) {
-            sendErrorResponse(httpResponse, ex.getMessage());
+        String token = getTokenFromRequest(httpRequest);
+        if (token != null && jwtProvider.validateAccessToken(token)) {
+            Claims claims = jwtProvider.getClaims(token);
+            JwtAuthentication authentication = jwtUtil.createAuthentication(claims);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } else {
+            sendErrorResponse(httpResponse, "Invalid or expired JWT token");
+            return;
         }
+        chain.doFilter(request, response);
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {

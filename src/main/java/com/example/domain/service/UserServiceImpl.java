@@ -6,7 +6,6 @@ import com.example.datasource.repository.UserRepository;
 import com.example.domain.exception.UserDoesntExistsException;
 import com.example.domain.model.Roles;
 import com.example.domain.model.User;
-import com.example.domain.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

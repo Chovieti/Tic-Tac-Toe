@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -40,17 +39,6 @@ public class AuthServiceImpl implements AuthService {
         }
         User newUser = service.registerUser(request.login(), encoded);
         return newUser.getId();
-    }
-
-    @Override
-    public UUID authenticate(String login, String password) {
-        User user = service.findByLogin(login)
-                .orElseThrow(() -> new BadCredentialsException("Invalid login or password"));
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new BadCredentialsException("Invalid login or password");
-        }
-        return user.getId();
     }
 
     @Override
