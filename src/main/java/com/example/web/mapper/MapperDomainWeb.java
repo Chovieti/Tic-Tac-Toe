@@ -18,7 +18,8 @@ public class MapperDomainWeb {
                 game.type(),
                 game.status(),
                 game.playerXId(),
-                game.playerOId()
+                game.playerOId(),
+                game.creationDate()
         );
     }
 
@@ -34,7 +35,8 @@ public class MapperDomainWeb {
                 game.getType(),
                 game.getStatus(),
                 game.getPlayerXId(),
-                game.getPlayerOId()
+                game.getPlayerOId(),
+                game.getCreationDate()
         );
     }
 
@@ -43,7 +45,7 @@ public class MapperDomainWeb {
     }
 
     public static WebUser toWebUser(User user) {
-        return new WebUser(user.getId(), user.getLogin());
+        return new WebUser(user.getId(), user.getLogin(), user.getRoles());
     }
 
     private static int[][] copyField(int[][] field) {

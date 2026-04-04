@@ -1,6 +1,6 @@
 # Tic-Tac-Toe
 Backend-приложение для игры в "Крестики-нолики"с поддержкой игры против компьютера и мультиплеера.
-Реализовано на Java с использованием Spring Boot, Spring Security, Spring Data JPA и PostgreSQL.
+Реализовано на Java с использованием Spring Boot, Spring Security (JWT), Spring Data JPA и PostgreSQL.
 
 ## 📋 О проекте
 
@@ -10,12 +10,14 @@ REST API, позволяющее пользователям регистриро
 
 ### Ключевые особенности
 
-- 👥 Регистрация и аутентификация пользователей (Basic Auth)
+- 👥 Регистрация и аутентификация пользователей (JWT)
 - 🤖 Игра против компьютера с алгоритмом Minimax
 - 👫 Мультиплеер: игра с другим игроком (очередь ходов)
 - 🎮 Поддержка множества одновременных игр
 - 🔒 Валидация всех ходов согласно правилам игры
 - 📊 Определение победителя и состояния игры
+- 📜 История завершённых игр
+- 🏆 Таблица лидеров (процент побед)
 - 🛡️ Централизованная обработка ошибок
 - 🗄️ Хранение данных в PostgreSQL с использованием JPA
 - 🏗️ Чистая архитектура с разделением ответственности
@@ -32,13 +34,14 @@ src/main/java/com/example/
 │   │   ├── GameField.java
 │   │   ├── GameStatus.java
 │   │   ├── GameType.java
+│   │   ├── LeaderboardEntry.java
 │   │   ├── Move.java
 │   │   ├── RegistrationData.java
+│   │   ├── Roles.java
 │   │   └── User.java
 │   ├── service/                       # Интерфейсы сервисов и их реализация
 │   │   ├── AuthService.java
-│   │   ├── AuthServiceImpl.java
-│   │   ├── CustomUserDetailsService.java
+│   │   ├── AuthServiceImpl.java=
 │   │   ├── GameService.java
 │   │   ├── GameServiceImpl.java
 │   │   ├── UserService.java
@@ -66,23 +69,31 @@ src/main/java/com/example/
 │       └── MapperDomainDatasource.java
 ├── web/                               # Веб-слой
 │   ├── controller/                    # Контроллеры
+│   │   ├── advice/                    # Обработка исключений
+│   │   │   └── GlobalExceptionHandler.java
 │   │   ├── AuthController.java
 │   │   ├── GameRepository.java
 │   │   └── UserController.java
-│   ├── model/                         # DTO для API
-│   │   ├── AuthResponse.java
-│   │   ├── ErrorResponse.java
-│   │   ├── SecurityUserDetails.java
+│   ├── dto/                         # DTO для API
+│   │   ├── JwtRequest.java
+│   │   ├── JwtResponse.java
+│   │   ├── RefreshJwtRequest.java
+│   │   ├── LeaderboardResponse.java
 │   │   ├── SignUpRequest.java
 │   │   ├── WebCurrentGame.java
 │   │   ├── WebGameField.java
 │   │   └── WebUser.java
+│   ├── model/                         # Модели ответов
+│   │   ├── AuthResponse.java
+│   │   ├── ErrorResponse.java
+│   │   └── JwtAuthentication.java
 │   ├── mapper/                        # Мапперы для API
 │   │   └── MapperDomainWeb.java
-│   ├── filter/                        # Фильтр для аутентификации
-│   │   └── AuthFilter.java
-│   └── advice/                        # Обработка исключений
-│       └── GlobalExceptionHandler.java
+│   ├── security/                      # JWT-компоненты
+│   │   ├── filter/                    # Фильтр для аутентификации
+│   │   │   └── AuthFilter.java
+│   │   ├── JwtProvider.java
+│   │   └── JwtUtil.java
 └── di/                                # Конфигурация DI
     ├── AppConfig.java
     └── SecurityConfig.java
@@ -93,9 +104,10 @@ src/main/java/com/example/
 - **Java** 18+
 - **Spring Boot** 4.0.1
 - **Spring Web MVC**
-- **Spring Security** (Basic Auth)
+- **Spring Security** (JWT)
 - **Spring Data JPA** (Hibernate)
 - **PostgreSQL**
+- **JJWT** (JSON Web Token)
 - **Gradle** 9.2.1 (система сборки)
 
 ## 📦 Требования
@@ -118,6 +130,14 @@ spring.datasource.driver-class-name=org.postgresql.Driver
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 ```
+
+### Настройка JWT
+Добавьте в application.properties:
+```
+jwt.secret=ваш_секретный_ключ_длиной_не_менее_256_бит
+jwt.access-expiration=3600000   # 1 час в миллисекундах
+jwt.refresh-expiration=86400000  # 24 часа
+```
 ## 📡 API Документация
 
 ### Базовый URL
@@ -127,7 +147,12 @@ http://localhost:8080
 
 ### Аутентификация
 
-Большинство эндпоинтов требует базовой аутентификации (Basic Auth). Заголовок `Authorization: Basic <base64(login:password)>`
+Аутентификация происходит по схеме JWT (JSON Web Token).
+
+- Регистрация – создаёт пользователя.
+- Авторизация – обменивает логин/пароль на пару токенов (access + refresh).
+- Доступ к защищённым эндпоинтам – требуется заголовок Authorization: Bearer <accessToken>.
+- Обновление токенов – используется refresh-токен для получения нового access-токена или новой пары.
 
 #### Регистрация нового пользователя
 
@@ -156,26 +181,84 @@ POST /auth/register
 - 400 Bad Resuest - пустой логин или пароль
 - 409 Conflict - пользователь с таким логином уже существует
 
-#### Аутентификация через Basic Auth. 
-Заголовок Authorization должен содержать учётные данные.
-
+#### Авторизация (получение токенов)
 Запрос:
 
 ```
-POST /auth/authenticate
+POST /auth/authorization
+```
+
+Тело запроса (JSON):
+```
+{
+  "login": "testuser",
+  "password": "testpass"
+}
 ```
 
 Ответ (200 OK):
 ```
 {
-  "userId": "550e8400-e29b-41d4-a716-446655440000",
-  "timestamp": "2025-03-18T12:00:00"
+  "type": "authenticate",
+  "accessToken": "eyJhbGciOiJIUzI1...",
+  "refreshToken": "eyJhbGciOiJIUzI1..."
 }
 ```
 Другие коды состояния:
 - 401 Unauthorized - неверный логин или пароль
 
-Все остальные запросы требует аутентификацию.
+#### Обновление access-токена (используя refresh-токен)
+Запрос:
+
+```
+POST /auth/token
+```
+
+Тело запроса (JSON):
+```
+{
+  "refreshToken": "eyJhbGciOiJIUzI1..."
+}
+```
+
+Ответ (200 OK):
+```
+{
+  "type": "refresh access",
+  "accessToken": "eyJhbGciOiJIUzI1... (новый)",
+  "refreshToken": "старый refresh-токен"
+}
+```
+Другие коды состояния:
+- 401 Unauthorized - неверный или просроченный токен
+
+#### Обновление пары токенов (refresh + access)
+Запрос:
+
+```
+POST /auth/refresh
+```
+
+Тело запроса (JSON):
+```
+{
+  "refreshToken": "eyJhbGciOiJIUzI1..."
+}
+```
+
+Ответ (200 OK):
+```
+{
+  "type": "refresh access",
+  "accessToken": "eyJhbGciOiJIUzI1... (новый)",
+  "refreshToken": "eyJhbGciOiJIUzI1... (новый)"
+}
+```
+Другие коды состояния:
+- 401 Unauthorized - неверный или просроченный токен
+
+Все остальные запросы требует аутентификацию с помощью jwt.
+
 ### Игры
 Используют модель ответа WebCurrentGame
 ```
@@ -245,6 +328,19 @@ GET /game/available
 Коды состояния:
 - 200 OK - Игры успешно найдены
 
+#### Получение завершённых игр текущего пользователя
+
+Возвращает завершенные игры текущего пользователя.
+
+```
+GET /game/finished
+```
+
+Ответ: массив объектов `WebCurrentGame` (см. выше)
+
+Коды состояния:
+- 200 OK - Игры успешно найдены
+
 #### Присоединение к игре
 
 ```
@@ -299,7 +395,7 @@ GET /user/{userId}
 ```
 Параметры:
 - userId(UUID) - идентификатор пользователя
-Ответ:
+  Ответ:
 ```
 {
   "userId": "550e8400-e29b-41d4-a716-446655440000",
@@ -310,6 +406,45 @@ GET /user/{userId}
 Коды состояния:
 - 200 OK - Пользователь успешно найден
 - 404 Not Found - Пользователь не найден
+
+#### Получение информации о текущем аутентифицированном пользователе
+
+```
+GET /auth/me
+```
+Ответ:
+```
+{
+  "principal": "550e8400-e29b-41d4-a716-446655440000",
+  "authorities": ["ROLE_USER"],
+  "authenticated": true
+}
+```
+
+Коды состояния:
+- 200 OK - Пользователь успешно найден
+- 404 Not Found - Пользователь не найден
+
+#### Таблица лидеров
+
+```
+GET /game/leaderboard?limit=10
+```
+
+Параметр limit (необязательный, по умолчанию 10) – количество записей.
+
+Ответ:
+```
+[
+  {
+    "userId": "550e8400-e29b-41d4-a716-446655440000",
+    "login": "player1",
+    "winRatio": 75.5
+  },
+  ...
+]
+```
+winRatio – процент побед от общего количества завершённых игр (победы + поражения + ничьи).
 
 ## 🎮 Правила игры
 
@@ -388,5 +523,6 @@ server.port=9090
 - Все идентификаторы — UUID
 - Хранилище: используется база данных PostgreSQL
 - При первом запуске таблицы создаются автоматически (ddl-auto=update)
-- Безопасность: Для аутентификации используется Basic Auth
+- Безопасность: Для аутентификации используется JWT
+- JWT access-token живет 1 час, а refresh-token 24 часа (настраивается)
 - Производительность: Алгоритм Minimax работает оптимально для поля 3x3. Для больших полей потребуется оптимизация.

@@ -44,6 +44,16 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public List<CurrentGame> getFinishedGames(UUID userId) {
+        return repository.findAllFinishedGamesByUserId(userId);
+    }
+
+    @Override
+    public List<LeaderboardEntry> getLeaderboard(int limit) {
+        return repository.getLeaderboard(limit);
+    }
+
+    @Override
     public CurrentGame joinGame(UUID gameId, UUID userId) {
         Optional<CurrentGame> opt = repository.getGame(gameId);
         if (opt.isEmpty()) {

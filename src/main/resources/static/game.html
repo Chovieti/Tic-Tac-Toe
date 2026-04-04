@@ -150,6 +150,7 @@
       try {
           const response = await authFetch(`/game/${gameId}`, {
               method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ field: board })
           });
           const game = await response.json();

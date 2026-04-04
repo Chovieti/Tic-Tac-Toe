@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Завершённые игры</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+    table { margin: 0 auto; border-collapse: collapse; width: 90%; }
+    th, td { border: 1px solid #333; padding: 8px 12px; }
+    th { background: #f0f0f0; }
+    button { padding: 5px 10px; cursor: pointer; }
+    .error { color: red; }
+    .win { color: green; font-weight: bold; }
+    .loss { color: red; }
+    .draw { color: orange; }
+    a { display: block; margin-top: 20px; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<h1>📋 Завершённые игры</h1>
+<div id="gamesContainer"></div>
+<div id="error" class="error"></div>
+<a href="/main.html">← На главную</a>
+
+<script>
+  if (!isAuthenticated()) window.location.href = '/login.html';
+
+  const currentUserId = getUserId();
+
+  async function loadFinishedGames() {
+      try {
+          const response = await authFetch('/game/finished');
+          const games = await response.json();
+          const container = document.getElementById('gamesContainer');
+          if (!games.length) {
+              container.innerHTML = '<p>Нет завершённых игр.</p>';
+              return;
+          }
+          let html = `<table>
+              <tr>
+                  <th>Дата создания</th>
+                  <th>Тип</th>
+                  <th>Результат</th>
+                  <th>Соперник</th>
+                  <th>Действие</th>
+              </tr>`;
+          for (const game of games) {
+              const date = new Date(game.creationDate).toLocaleString();
+              const type = game.type === 'VS_COMPUTER' ? '🤖 Против компьютера' : '👥 Против игрока';
+              let resultText = '', resultClass = '';
+              if (game.status === 'WIN_PLAYER_X') {
+                  const isWinner = game.playerXId === currentUserId;
+                  resultText = isWinner ? 'Победа (X)' : 'Поражение (X)';
+                  resultClass = isWinner ? 'win' : 'loss';
+              } else if (game.status === 'WIN_PLAYER_O') {
+                  const isWinner = game.playerOId === currentUserId;
+                  resultText = isWinner ? 'Победа (O)' : 'Поражение (O)';
+                  resultClass = isWinner ? 'win' : 'loss';
+              } else {
+                  resultText = 'Ничья';
+                  resultClass = 'draw';
+              }
+              let opponent = '—';
+              if (game.type === 'VS_PLAYER') {
+                  const opponentId = game.playerXId === currentUserId ? game.playerOId : game.playerXId;
+                  opponent = opponentId ? opponentId.substring(0, 8) + '…' : 'Неизвестно';
+              } else {
+                  opponent = 'Компьютер';
+              }
+              html += `<tr>
+                  <td>${date}</td>
+                  <td>${type}</td>
+                  <td class="${resultClass}">${resultText}</td>
+                  <td>${opponent}</td>
+                  <td><button onclick="viewGame('${game.id}')">Просмотреть</button></td>
+              </tr>`;
+          }
+          html += '</table>';
+          container.innerHTML = html;
+      } catch (e) {
+          document.getElementById('error').textContent = e.message;
+      }
+  }
+
+  window.viewGame = (gameId) => {
+      window.location.href = `/game.html?id=${gameId}`;
+  };
+
+  loadFinishedGames();
+</script>
+</body>
+</html>

@@ -4,11 +4,13 @@ import com.example.datasource.mapper.MapperDomainDatasource;
 import com.example.datasource.model.DSUser;
 import com.example.datasource.repository.UserRepository;
 import com.example.domain.exception.UserDoesntExistsException;
+import com.example.domain.model.Roles;
 import com.example.domain.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -25,7 +27,7 @@ public class UserServiceImpl implements UserService {
         if (existsByLogin(login)) {
             throw new IllegalArgumentException("Login already taken");
         }
-        User domainUser = new User(null, login, encodedPassword);
+        User domainUser = new User(null, login, encodedPassword, Set.of(Roles.USER));
         DSUser savedUser = repository.save(MapperDomainDatasource.toDSUser(domainUser));
         return MapperDomainDatasource.toDomainUser(savedUser);
     }

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Таблица лидеров</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+    table { margin: 0 auto; border-collapse: collapse; width: 60%; }
+    th, td { border: 1px solid #333; padding: 8px 12px; }
+    th { background: #f0f0f0; }
+    .error { color: red; }
+    a { display: block; margin-top: 20px; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<h1>🏆 Таблица лидеров</h1>
+<div id="leaderboardContainer"></div>
+<div id="error" class="error"></div>
+<a href="/main.html">На главную</a>
+
+<script>
+  if (!isAuthenticated()) window.location.href = '/login.html';
+
+  async function loadLeaderboard() {
+      try {
+          const response = await authFetch('/game/leaderboard?limit=10');
+          const entries = await response.json();
+          const container = document.getElementById('leaderboardContainer');
+          if (entries.length === 0) {
+              container.innerHTML = '<p>Нет данных.</p>';
+              return;
+          }
+          let html = '<table><tr><th>#</th><th>Игрок</th><th>Win Ratio (%)</th></tr>';
+          entries.forEach((entry, idx) => {
+              html += `<tr>
+                  <td>${idx + 1}</td>
+                  <td>${escapeHtml(entry.login)}</td>
+                  <td>${entry.winRatio.toFixed(2)}</td>
+              </tr>`;
+          });
+          html += '</table>';
+          container.innerHTML = html;
+      } catch (e) {
+          document.getElementById('error').textContent = e.message;
+      }
+  }
+
+  function escapeHtml(str) {
+      return str.replace(/[&<>]/g, function(m) {
+          if (m === '&') return '&amp;';
+          if (m === '<') return '&lt;';
+          if (m === '>') return '&gt;';
+          return m;
+      });
+  }
+
+  loadLeaderboard();
+</script>
+</body>
+</html>

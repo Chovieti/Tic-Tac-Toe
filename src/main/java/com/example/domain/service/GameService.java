@@ -1,9 +1,6 @@
 package com.example.domain.service;
 
-import com.example.domain.model.CurrentGame;
-import com.example.domain.model.GameStatus;
-import com.example.domain.model.GameType;
-import com.example.domain.model.Move;
+import com.example.domain.model.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +12,10 @@ public interface GameService {
     CurrentGame getGame(UUID gameId);
     // Метод получения всех доступных игр
     List<CurrentGame> getAvailableGames(UUID userId);
+    // Метод получения всех завершенных игр
+    List<CurrentGame> getFinishedGames(UUID userId);
+    // Метод получения таблицы лидеров
+    List<LeaderboardEntry> getLeaderboard(int limit);
     // Метод присоединения к игре
     CurrentGame joinGame(UUID gameId, UUID userId);
     // Метод обработки хода пользователя (нужно расширить, чтобы смотрел на userId)

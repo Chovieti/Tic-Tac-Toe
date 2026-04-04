@@ -1,33 +1,30 @@
 package com.example.web.security.filter;
 
-import com.example.domain.exception.BadCredentialsException;
-import com.example.domain.service.AuthService;
 import com.example.web.model.ErrorResponse;
-import com.example.web.model.SecurityUserDetails;
+import com.example.web.model.JwtAuthentication;
+import com.example.web.security.JwtProvider;
+import com.example.web.security.JwtUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
 
 public class AuthFilter extends GenericFilterBean {
+    private final JwtProvider jwtProvider;
+    private final JwtUtil jwtUtil;
 
-    private final AuthService service;
-
-    public AuthFilter(AuthService service) {
-        this.service = service;
+    public AuthFilter(JwtProvider jwtProvider, JwtUtil jwtUtil) {
+        this.jwtProvider = jwtProvider;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -37,39 +34,30 @@ public class AuthFilter extends GenericFilterBean {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        String authHeader = httpRequest.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Basic ")) {
-            chain.doFilter(request, response);
+        String token = getTokenFromRequest(httpRequest);
+        if (token != null && jwtProvider.validateAccessToken(token)) {
+            Claims claims = jwtProvider.getClaims(token);
+            JwtAuthentication authentication = jwtUtil.createAuthentication(claims);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } else {
+            sendErrorResponse(httpResponse, "Invalid or expired JWT token");
             return;
         }
+        chain.doFilter(request, response);
+    }
 
-        try {
-            byte[] decodedBytes = Base64.getDecoder().decode(authHeader.substring("Basic ".length()));
-            String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
-
-            String[] values = decodedString.split(":", 2);
-            if (values.length != 2) throw new IllegalArgumentException("Invalid basic authentication format");
-            String login = values[0], password = values[1];
-            if (login.isEmpty() || password.isEmpty()) {
-                throw new BadCredentialsException("Login or password cannot be empty");
-            }
-            UUID userId = service.authenticate(login, password);
-
-            SecurityUserDetails user = new SecurityUserDetails(userId, login, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities());
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            chain.doFilter(request, response);
-        } catch (BadCredentialsException ex) {
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.setContentType("application/json");
-            ErrorResponse errorResponse = new ErrorResponse("Unauthorized", ex.getMessage());
-            new ObjectMapper().writeValue(response.getWriter(), errorResponse);
-//            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//            httpResponse.getWriter().write("Authentication failed");
+    private String getTokenFromRequest(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
         }
+        return null;
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        ErrorResponse errorResponse = new ErrorResponse("Unauthorized", message);
+        new ObjectMapper().writeValue(response.getWriter(), errorResponse);
     }
 }
